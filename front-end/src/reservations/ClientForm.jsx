@@ -42,7 +42,7 @@ function ClientForm({
 
   return (
     <form onSubmit={formSubmitHandler}>
-      <div className='form-group row'>
+      <div className='form-group row content-center'>
         <div className='form-floating col-6 mb-3'>
           <input
             className='form-control'
@@ -77,7 +77,6 @@ function ClientForm({
             name='mobile_number'
             onChange={changeHandler}
             value={formData.mobile_number}
-            pattern='[0-9]{3}-[0-9]{3}-[0-9]{4}'
             min={10}
             max={10}
             required={true}
@@ -92,8 +91,8 @@ function ClientForm({
             type='date'
             name='reservation_date'
             onChange={changeHandler}
+            pattern='\d{4}-\d{2}-\d{2}'
             value={formData.reservation_date}
-            pattern='[0-9]{10}'
             required={true}
           />
           <label htmlFor='reservation_date'>Reservation Date:</label>

@@ -1,7 +1,7 @@
 
 const DisplayReservation = ({ reservation }) => {
   return (
-    <div className='card'>
+    <div className='card m-3 col-md-3'>
       <div className='card-body'>
         <h5 className='card-title'>{reservation.first_name} {reservation.last_name}</h5>
         <h6 className='card-subtitle mb-2 text-muted'>{reservation.mobile_number}</h6>

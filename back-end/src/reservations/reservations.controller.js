@@ -5,17 +5,22 @@ const services = require('./reservations.services');
 const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
 
 // helper functions
+const today = new Date();
+const isPast = (date) => date < today;
+const isTuesday = (date) => date.getDay() === 2;
 
-function isValidPhoneNumber(number) {
-  const phoneNumberRegex = /^\d{3}-\d{3}-\d{4}$/;
-  if (correctPhoneLength(number)) {
-    return phoneNumberRegex.test(number);
-  }
-  return false;
+function isValidPhoneNumber(phoneNumber) {
+  const phoneRegex = /^\d{10}$/;
+  return phoneRegex.test(phoneNumber);
 }
 
-function correctPhoneLength(number) {
-  return number.length === 10;
+function formatPhoneNumber(phoneNumber) {
+  const cleaned = ('' + phoneNumber).replace(/\D/g, '');
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return match[1] + '-' + match[2] + '-' + match[3];
+  }
+  return null;
 }
 
 function isValidDate(date) {
@@ -67,6 +72,21 @@ function dateValid(req, res, next) {
     });
   }
 
+  const date = new Date(reservation_date);
+  if (isPast(date)) {
+    return next({
+      status: 400,
+      message: `reservation_date must be a future date: ${reservation_date}`,
+    });
+  }
+
+  if (isTuesday(date)) {
+    return next({
+      status: 400,
+      message: `The restaurant is closed on Tuesdays. Please choose a different day.`,
+    });
+  }
+
   if (!isValidTime(reservation_time)) {
     return next({
       status: 400,
@@ -85,26 +105,19 @@ function validPhoneNumber(req, res, next) {
       message: `mobile_number is not a valid phone number: ${mobile_number}`,
     });
   }
-  if (correctPhoneLength(mobile_number)) {
-    res.locals.data.mobile_number = `${mobile_number.slice(0, 3)}-${mobile_number.slice(
-      3,
-      6,
-    )}-${mobile_number.slice(6)}`;
+  const formattedPhoneNumber = formatPhoneNumber(mobile_number);
+  if (formatPhoneNumber) {
+    res.locals.data.mobile_number = formattedPhoneNumber;
   }
+
   next();
 }
 
 // route handlers
 
 async function list(req, res) {
-  const date = req.query.date;
-  if (date) {
-    const dateData = await services.dateLookup(date);
-    return res.json({
-      data: dateData,
-    });
-  }
-  const data = await services.list();
+  const { date } = req.query;
+  const data = await services.list(date);
   res.json({
     data,
   });
