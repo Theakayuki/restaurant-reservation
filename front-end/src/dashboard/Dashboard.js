@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { listReservations, listTables } from '../utils/api';
 import { next, previous } from '../utils/date-time';
 
 import { useHistory } from 'react-router-dom';
 import ErrorAlert from '../layout/ErrorAlert';
 import DisplayReservation from '../reservations/DisplayReservation';
-import { listReservations } from '../utils/api';
+import TableDisplay from '../tables/TableDisplay';
 
 /**
  * Defines the dashboard page.
@@ -15,9 +16,12 @@ import { listReservations } from '../utils/api';
 function Dashboard({ date }) {
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
+  const [tablesError, setTablesError] = useState(null);
+  const [tables, setTables] = useState([]);
   const history = useHistory();
 
   useEffect(loadDashboard, [date]);
+  useEffect(loadTables, []);
 
   function loadDashboard() {
     const abortController = new AbortController();
@@ -25,6 +29,13 @@ function Dashboard({ date }) {
     listReservations({ date }, abortController.signal)
       .then(setReservations)
       .catch(setReservationsError);
+    return () => abortController.abort();
+  }
+
+  function loadTables() {
+    const abortController = new AbortController();
+    setTablesError(null);
+    listTables(abortController.signal).then(setTables).catch(setTablesError);
     return () => abortController.abort();
   }
 
@@ -51,8 +62,8 @@ function Dashboard({ date }) {
   return (
     <main>
       <h1>Dashboard</h1>
-      <div className='d-md-flex flex-column mb-3'>
-        <h4 className='mb-3 col-3'>Reservations for date</h4>
+      <div className='d-md-flex flex-column mb-3 align-items-center justify-content-center'>
+        <h4 className='mb-3'>Reservations for date</h4>
         <h5 className='mb-3'>{date}</h5>
         <div className='ml-md-3 mb-3'>
           <div>
@@ -69,16 +80,27 @@ function Dashboard({ date }) {
         </div>
       </div>
 
-      <ErrorAlert error={reservationsError} />
-      {/* {JSON.stringify(reservations)} */}
-      <div className='d-flex flex-wrap'>
-        {reservations.length > 0 ? (
-          reservations.map((reservation) => (
-            <DisplayReservation key={reservation.reservation_id} reservation={reservation} />
-          ))
-        ) : (
-          <h4>No reservations found</h4>
-        )}
+      <ErrorAlert error={reservationsError || tablesError} />
+      <div className='d-flex flex-wrap justify-content-evenly'>
+        {/* {JSON.stringify(reservations)} */}
+        <div className='col-md-6'>
+          <h4>Reservations</h4>
+          {reservations.length > 0 ? (
+            reservations.map((reservation) => (
+              <DisplayReservation key={reservation.reservation_id} reservation={reservation} />
+            ))
+          ) : (
+            <h4>No reservations found</h4>
+          )}
+        </div>
+        <div className='col-md-6'>
+          <h4>Tables</h4>
+          {tables.length > 0 ? (
+            tables.map((table) => <TableDisplay key={table.table_id} table={table} />)
+          ) : (
+            <h4>No tables found</h4>
+          )}
+        </div>
       </div>
     </main>
   );

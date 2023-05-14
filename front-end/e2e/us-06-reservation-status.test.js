@@ -108,6 +108,9 @@ describe("US-06 - Reservation status - E2E", () => {
         path: ".screenshots/us-06-finish-before.png",
         fullPage: true,
       });
+      console.log(`table.table_id: ${table.table_id}`);
+      console.log(`table.table_name: ${table.table_name}`);
+      console.log(`reservation.reservation_id: ${reservation.reservation_id}`);
 
       const finishButtonSelector = `[data-table-id-finish="${table.table_id}"]`;
       await page.waitForSelector(finishButtonSelector);

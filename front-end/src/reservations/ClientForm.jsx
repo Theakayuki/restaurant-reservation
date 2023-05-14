@@ -1,4 +1,6 @@
-const { useState } = require('react');
+import { readReservation } from '../utils/api';
+
+const { useState, useEffect } = require('react');
 const { useHistory } = require('react-router-dom');
 
 function ClientForm({
@@ -11,6 +13,7 @@ function ClientForm({
     reservation_time: '',
     people: '',
   },
+  reservationId = null,
 }) {
   const [formData, setFormData] = useState(initialValues);
   const history = useHistory();
@@ -22,18 +25,36 @@ function ClientForm({
     });
   }
 
+  useEffect(() => {
+    if (reservationId) {
+      async function loadReservation() {
+        const abortController = new AbortController();
+        const reservation = await readReservation(
+          reservationId,
+          abortController.signal
+        );
+
+        //format date and time
+        const formattedDate = reservation.reservation_date.split('T')[0];
+        reservation.reservation_date = formattedDate;
+
+        setFormData({
+          first_name: reservation.first_name,
+          last_name: reservation.last_name,
+          mobile_number: reservation.mobile_number,
+          reservation_date: reservation.reservation_date,
+          reservation_time: reservation.reservation_time,
+          people: reservation.people,
+        });
+      }
+      loadReservation();
+    }
+  }, [reservationId]);
+  
+
   function formSubmitHandler(event) {
     event.preventDefault();
-    const form = event.target;
-    const data = {
-      first_name: form.first_name.value,
-      last_name: form.last_name.value,
-      mobile_number: form.mobile_number.value,
-      reservation_date: form.reservation_date.value,
-      reservation_time: form.reservation_time.value,
-      people: form.people.value,
-    };
-    submitHandler(data);
+    submitHandler(formData);
   }
 
   function cancelHandler() {
@@ -91,7 +112,6 @@ function ClientForm({
             type='date'
             name='reservation_date'
             onChange={changeHandler}
-            pattern='\d{4}-\d{2}-\d{2}'
             value={formData.reservation_date}
             required={true}
           />
@@ -106,7 +126,6 @@ function ClientForm({
             name='reservation_time'
             onChange={changeHandler}
             value={formData.reservation_time}
-            pattern='\d{2}:\d{2}:\d{2}'
             required={true}
           />
           <label htmlFor='reservation_time'>Reservation Time:</label>
