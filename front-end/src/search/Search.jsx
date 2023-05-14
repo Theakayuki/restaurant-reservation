@@ -43,28 +43,25 @@ function Search() {
   return (
     <div>
       <ErrorAlert error={errors} />
-      <form onSubmit={handleSubmit} className='row g-3'>
-        <div className='form-group'>
-          <div className='form-floating col-6 mb-3'>
-            <input
-              id='mobile_number'
-              name='mobile_number'
-              type='text'
-              className='form-control mt-5'
-              placeholder="Enter a customer's phone number"
-              onChange={handleChange}
-              value={search.mobile_number}
-              required
-            />
-            <label htmlFor='mobile_number'>Enter a customer's phone number</label>
-
-            <button type='submit' className='btn btn-primary'>
-              Find
-            </button>
-          </div>
+      <form onSubmit={handleSubmit} className='form p-3'>
+        <div className='input-group'>
+          <label htmlFor='mobile_number' className='input-group-text'>Phone Number</label>
+          <input
+            id='mobile_number'
+            name='mobile_number'
+            type='text'
+            className='form-control'
+            placeholder="Enter a customer's phone number"
+            onChange={handleChange}
+            value={search.mobile_number}
+            required
+          />
+          <button type='submit' className='btn btn-primary'>
+            Search
+          </button>
         </div>
       </form>
-      <div>
+      <div className='ms-3'>
         {reservations.length > 0 ? (
           reservations.map((reservation) => (
             <DisplayReservation key={reservation.reservation_id} reservation={reservation} />
