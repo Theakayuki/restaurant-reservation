@@ -1,25 +1,26 @@
-import { useHistory } from "react-router-dom";
-import { finishTable } from "../utils/api";
+import { useHistory } from 'react-router-dom';
+import { finishTable } from '../utils/api';
 
-const TableDisplay = ({ table }) => {
+const TableDisplay = ({ table, loadDashboard }) => {
   const history = useHistory();
-  function finishHandler({ target: { dataset: {
-    tableIdFinish,
-    reservationIdFinish,
-  }}}) {
-    const abortController = new AbortController();
-    if (
 
-      window.confirm(
-        "Is this table ready to seat new guests? This cannot be undone."
-      )
-    ) {
-      finishTable(tableIdFinish, reservationIdFinish, abortController.signal);
-      history.go();
+  async function finishHandler({
+    target: {
+      dataset: { tableIdFinish, reservationIdFinish },
+    },
+  }) {
+    const abortController = new AbortController();
+    if (window.confirm('Is this table ready to seat new guests? This cannot be undone.')) {
+      try {
+        await finishTable(tableIdFinish, reservationIdFinish, abortController.signal);
+        await loadDashboard();
+        history.push('/dashboard');
+      } catch (error) {
+        console.log(error);
+      }
     }
   }
 
-    
   return (
     <div className='m-3 text-center'>
       <div className='card'>
@@ -38,7 +39,7 @@ const TableDisplay = ({ table }) => {
             >
               Finish
             </button>
-          ) : ''}
+          ) : null}
         </div>
       </div>
     </div>

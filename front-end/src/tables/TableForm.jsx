@@ -42,6 +42,8 @@ function TableForm({ submitForm }) {
       return 'Table name must be at least 2 characters long.';
     }
 
+    
+
     return null;
   }
 

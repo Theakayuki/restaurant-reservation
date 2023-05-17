@@ -135,6 +135,25 @@ function validateDateTime(req, res, next) {
   next();
 }
 
+function formatPhoneNumber(req, res, next) {
+  // format phone number to xxx-xxx-xxxx
+  const { data = {} } = res.locals;
+  const mobile_number = data.mobile_number;
+  const formatted = mobile_number.replace(/\D/g, '');
+  if (formatted.length !== 10) {
+    return next({
+      status: 400,
+      message: 'The mobile_number field must be a valid phone number.',
+    });
+  }
+
+  res.locals.data.mobile_number = formatted.replace(
+    /(\d{3})(\d{3})(\d{4})/,
+    '$1-$2-$3',
+  );
+  next();
+}
+
 async function validateReservationExists(req, res, next) {
   const { reservation_id } = req.params;
   const reservation = await services.read(reservation_id);
@@ -272,6 +291,7 @@ module.exports = {
     validateDateFormat,
     validateTimeFormat,
     validateDateTime,
+    formatPhoneNumber,
     validateBookedStatus,
     asyncErrorBoundary(create),
   ],
@@ -284,6 +304,7 @@ module.exports = {
     validateDateFormat,
     validateTimeFormat,
     validateDateTime,
+    formatPhoneNumber,
     validateReservationUpdatable,
     asyncErrorBoundary(update),
   ],

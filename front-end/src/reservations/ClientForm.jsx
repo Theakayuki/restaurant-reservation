@@ -98,6 +98,8 @@ function ClientForm({
             name='mobile_number'
             onChange={changeHandler}
             value={formData.mobile_number}
+            pattern='\d{3}-?\d{3}-?\d{4}'
+            title='Please enter a valid phone number in the format 123-456-7890.'
             min={10}
             max={10}
             required={true}

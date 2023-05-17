@@ -16,28 +16,30 @@ import TableDisplay from '../tables/TableDisplay';
 function Dashboard({ date }) {
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
-  const [tablesError, setTablesError] = useState(null);
   const [tables, setTables] = useState([]);
   const history = useHistory();
 
   useEffect(loadDashboard, [date]);
-  useEffect(loadTables, []);
 
   function loadDashboard() {
     const abortController = new AbortController();
     setReservationsError(null);
     listReservations({ date }, abortController.signal)
       .then(setReservations)
+      .then(listTables)
+      .then((tables) => tables.sort(tableSortByOccupied))
+      .then(setTables)
       .catch(setReservationsError);
     return () => abortController.abort();
   }
 
-  function loadTables() {
-    const abortController = new AbortController();
-    setTablesError(null);
-    listTables(abortController.signal).then(setTables).catch(setTablesError);
-    return () => abortController.abort();
+  function tableSortByOccupied(tableA, tableB) {
+    // will move tables that have reservations to the top of the list
+    if (tableA.reservation_id && !tableB.reservation_id) return -1;
+    if (!tableA.reservation_id && tableB.reservation_id) return 1;
+    return 0;
   }
+
 
   function todaysDate() {
     const today = new Date();
@@ -80,7 +82,7 @@ function Dashboard({ date }) {
         </div>
       </div>
 
-      <ErrorAlert error={reservationsError || tablesError} />
+      <ErrorAlert error={reservationsError} />
       <div className='d-flex flex-wrap justify-content-evenly'>
         {/* {JSON.stringify(reservations)} */}
         <div className='col-md-6'>
@@ -96,7 +98,7 @@ function Dashboard({ date }) {
         <div className='col-md-6'>
           <h4>Tables</h4>
           {tables.length > 0 ? (
-            tables.map((table) => <TableDisplay key={table.table_id} table={table} />)
+            tables.map((table) => <TableDisplay key={table.table_id} table={table} loadDashboard={loadDashboard} />)
           ) : (
             <h4>No tables found</h4>
           )}
