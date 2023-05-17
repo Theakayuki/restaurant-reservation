@@ -5,9 +5,10 @@ const services = require('./reservations.services');
 const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
 const hasProps = require('../util/hasProp');
 
-// helper functions
+// helper functions and variables this section is for the lower level functions that are used in the middleware and the routes
+// Best practice is to make the code clear to read and avoid commenting.
 
-const today = Date.now();
+const today = Date.now(); // today's date in milliseconds
 const UTC = (date) => {
   return Date.UTC(
     date.getUTCFullYear(),
@@ -17,13 +18,13 @@ const UTC = (date) => {
     date.getUTCMinutes(),
     date.getUTCSeconds(),
   );
-};
+}; // converts a date to UTC
 
-const isPast = (date) => date <= today;
-const isTuesday = (date) => date.getDay() === 2;
-const validDate = /\d{4}-\d{2}-\d{2}/;
-const validTime = /\d{2}:\d{2}/;
-const validStatus = ['booked', 'seated', 'finished', 'cancelled'];
+const isPast = (date) => date <= today; // checks if a date is in the past
+const isTuesday = (date) => date.getDay() === 2; // checks if a date is a Tuesday
+const validDate = /\d{4}-\d{2}-\d{2}/; // regex for a valid date
+const validTime = /\d{2}:\d{2}/; // regex for a valid time
+const validStatus = ['booked', 'seated', 'finished', 'cancelled']; // array of valid status values
 const requiredProperties = [
   'first_name',
   'last_name',
@@ -31,7 +32,7 @@ const requiredProperties = [
   'reservation_date',
   'reservation_time',
   'people',
-];
+]; // array of required properties for a reservation
 
 // middleware
 
@@ -41,7 +42,7 @@ function hasData(req, res, next) {
     return next();
   }
   next({ status: 400, message: 'Body must have data property' });
-}
+} // checks if the request body has a data property
 
 const hasRequiredProperties = hasProps(requiredProperties);
 
@@ -60,8 +61,8 @@ function validateCapacity(req, res, next) {
       message: 'The reservation must be for at least 1 person.',
     });
   }
-  next();
-}
+  next(); 
+} // checks if the people property is a number and is greater than 0
 
 function validateDateFormat(req, res, next) {
   const { data = {} } = res.locals;
@@ -73,7 +74,7 @@ function validateDateFormat(req, res, next) {
     });
   }
   next();
-}
+} // checks if the reservation_date property is a valid date
 
 function validateTimeFormat(req, res, next) {
   const { data = {} } = res.locals;
@@ -85,7 +86,7 @@ function validateTimeFormat(req, res, next) {
     });
   }
   next();
-}
+} // checks if the reservation_time property is a valid time
 
 function validateDateTime(req, res, next) {
   const { data = {} } = res.locals;
@@ -99,44 +100,43 @@ function validateDateTime(req, res, next) {
     reservation.getUTCHours(),
     reservation.getUTCMinutes(),
     reservation.getUTCSeconds(),
-  );
+  ); // converts the date to UTC
 
   if (isPast(dateUTC)) {
     return next({
       status: 400,
       message: 'The reservation must be in the future.',
     });
-  }
+  } // check if reservation is in the past
   if (isTuesday(reservation)) {
     return next({
       status: 400,
       message: 'The restaurant is closed on Tuesdays.',
     });
-  }
-  // check if reservation is before 10:30am
-  const open = new Date(`${reservation_date}T10:30`);
-  const openUTC = UTC(open);
+  } // check if reservation is on a Tuesday
+  const open = new Date(`${reservation_date}T10:30`); // set the opening time to 10:30am
+  const openUTC = UTC(open); // convert the opening time to UTC
   if (dateUTC < openUTC) {
     return next({
       status: 400,
       message: 'The reservation must be after 10:30am.',
     });
-  }
+  } // check if reservation is before 10:30am
 
-  // check if reservation is after 9:30pm
-  const close = new Date(`${reservation_date}T21:30`);
-  const closeUTC = UTC(close);
+
+  const close = new Date(`${reservation_date}T21:30`); // set the closing time to 9:30pm
+  const closeUTC = UTC(close); // convert the closing time to UTC
   if (dateUTC > closeUTC) {
     return next({
       status: 400,
       message: 'The reservation must be before 9:30pm.',
     });
-  }
+  } // check if reservation is after 9:30pm
   next();
-}
+} // checks if the reservation is in the future, on a Tuesday, before 10:30am, or after 9:30pm
 
-function formatPhoneNumber(req, res, next) {
-  // format phone number to xxx-xxx-xxxx
+function validatePhoneNumber(req, res, next) {
+
   const { data = {} } = res.locals;
   const mobile_number = data.mobile_number;
   const formatted = mobile_number.replace(/\D/g, '');
@@ -147,12 +147,8 @@ function formatPhoneNumber(req, res, next) {
     });
   }
 
-  res.locals.data.mobile_number = formatted.replace(
-    /(\d{3})(\d{3})(\d{4})/,
-    '$1-$2-$3',
-  );
   next();
-}
+} // checks if the mobile_number property is a valid phone number
 
 async function validateReservationExists(req, res, next) {
   const { reservation_id } = req.params;
@@ -165,7 +161,7 @@ async function validateReservationExists(req, res, next) {
   }
   res.locals.reservation = reservation;
   next();
-}
+} // checks if the reservation exists
 
 function validateBookedStatus(req, res, next) {
   const { data = {} } = res.locals;
@@ -180,7 +176,7 @@ function validateBookedStatus(req, res, next) {
   }
   
   next();
-}
+} // checks if the status property is booked
 
 function validateStatus(req, res, next) {
   const { data = {} } = res.locals;
@@ -192,7 +188,7 @@ function validateStatus(req, res, next) {
     });
   }
   next();
-}
+} // checks if the status property is booked, seated, finished, or cancelled
 
 function validateReservationUpdatable(req, res, next) {
   const { reservation } = res.locals;
@@ -209,7 +205,7 @@ function validateReservationUpdatable(req, res, next) {
     });
   }
   next();
-}
+} // checks if the reservation is finished or cancelled
 
 function validateTableIdExists(req, res, next) {
   const { data = {} } = res.locals;
@@ -221,7 +217,7 @@ function validateTableIdExists(req, res, next) {
     });
   }
   next();
-}
+} // checks if the table_id property exists
 
 // CRUD functions
 
@@ -237,17 +233,17 @@ async function list(req, res) {
     const data = await services.list();
     res.json({ data });
   }
-}
+} // lists all reservations
 
 async function create(req, res) {
   const data = await services.create(res.locals.data);
   res.status(201).json({ data });
-}
+} // creates a new reservation
 
 async function read(req, res) {
   const { reservation } = res.locals;
   res.json({ data: reservation });
-}
+}   
 
 async function update(req, res) {
   const { reservation_id } = req.params;
@@ -259,28 +255,28 @@ async function update(req, res) {
     people: response.people,
   };
   res.json({ data });
-}
+} // updates a reservation
 
 async function updateStatus(req, res) {
   const { reservation_id } = res.locals.reservation;
   const { status } = res.locals.data;
   const data = await services.updateStatus(reservation_id, status);
   res.status(200).json({ data });
-}
+} // updates the status of a reservation
 
 async function seat(req, res) {
   const { reservation_id } = res.locals.reservation;
   const { table_id } = res.locals.data;
   const data = await services.seat(reservation_id, table_id);
   res.json({ data });
-}
+} // seats a reservation
 
 async function finish(req, res) {
   const { reservation_id } = res.locals.reservation;
   const { table_id } = res.locals.data;
   const data = await services.finish(reservation_id, table_id);
   res.json({ data });
-}
+} // finishes a reservation
 
 module.exports = {
   list: asyncErrorBoundary(list),
@@ -291,7 +287,7 @@ module.exports = {
     validateDateFormat,
     validateTimeFormat,
     validateDateTime,
-    formatPhoneNumber,
+    validatePhoneNumber,
     validateBookedStatus,
     asyncErrorBoundary(create),
   ],
@@ -304,7 +300,7 @@ module.exports = {
     validateDateFormat,
     validateTimeFormat,
     validateDateTime,
-    formatPhoneNumber,
+    validatePhoneNumber,
     validateReservationUpdatable,
     asyncErrorBoundary(update),
   ],

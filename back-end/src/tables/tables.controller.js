@@ -12,18 +12,18 @@ function isValidTable(table) {
   if (!isCapacityNumber(table)) return false;
   if (!isValidCapacity(table)) return false;
   return true;
-}
+} // checks if a table object has a table_name and capacity property
 
 function isValidCapacity(table) {
   const { capacity } = table;
   if (+capacity < 1) return false;
   return true;
-}
+} // checks if a table object has a capacity of at least 1
 
 function isCapacityNumber(table) {
   if (typeof table.capacity !== 'number') return false;
   return true;
-}
+} // checks if a table object has a capacity that is a number
 
 // validation middleware
 
@@ -33,7 +33,7 @@ function hasData(req, res, next) {
     return next();
   }
   next({ status: 400, message: 'Body must have data property' });
-}
+} // checks if the request body has a data property
 
 function hasValidProperties(req, res, next) {
   const { data = {} } = res.locals;
@@ -65,7 +65,7 @@ function hasValidProperties(req, res, next) {
     });
   }
   return next();
-}
+} // checks if the request body has a table_name and capacity property
 
 function hasValidId(req, res, next) {
   const { table_id } = req.params;
@@ -76,7 +76,7 @@ function hasValidId(req, res, next) {
     });
   }
   return next();
-}
+}   // checks if the request params has a table_id property that is a positive integer
 
 async function tableExists(req, res, next) {
   const { table_id } = req.params;
@@ -89,7 +89,7 @@ async function tableExists(req, res, next) {
   }
   res.locals.table = table;
   return next();
-}
+} // checks if the table_id in the request params exists in the database
 
 async function reservationExists(req, res, next) {
   const { reservation_id } = res.locals.data;
@@ -102,7 +102,7 @@ async function reservationExists(req, res, next) {
   }
   res.locals.reservation = reservation;
   return next();
-}
+} // checks if the reservation_id in the request body exists in the database
 
 function tableHasRoom(req, res, next) {
   const { table, reservation } = res.locals;
@@ -113,7 +113,7 @@ function tableHasRoom(req, res, next) {
     });
   }
   return next();
-}
+} // checks if the table has enough capacity for the reservation
 
 function isReservationSeated(req, res, next) {
   const { status } = res.locals.reservation;
@@ -124,7 +124,7 @@ function isReservationSeated(req, res, next) {
     });
   }
   return next();
-}
+} // checks if the reservation is already seated
 
 function isTableOccupied(req, res, next) {
   const { table } = res.locals;
@@ -135,7 +135,7 @@ function isTableOccupied(req, res, next) {
     });
   }
   return next();
-}
+} // checks if the table is occupied
 
 function tableIsFree(req, res, next) {
   const { table } = res.locals;
@@ -147,7 +147,7 @@ function tableIsFree(req, res, next) {
   }
 
   return next();
-}
+} // checks if the table is free
 
 
 // CRUD Logic
@@ -155,24 +155,24 @@ function tableIsFree(req, res, next) {
 async function list(req, res) {
   const data = await services.list();
   res.json({ data });
-}
+} // returns a list of all tables
 
 async function create(req, res) {
   const data = await services.create(res.locals.data);
   res.status(201).json({ data });
-}
+} // creates a new table
 
 async function update(req, res) {
   const { table_id } = req.params;
   const data = await services.update(table_id, res.locals.data);
   res.json({ data });
-}
+} // updates a table
 
 async function destroy(req, res) {
   const { table_id } = req.params;
   await services.destroy(table_id);
   res.sendStatus(204);
-}
+} // deletes a table
 
 async function seat(req, res) {
   const table = res.locals.table;
@@ -184,7 +184,7 @@ async function seat(req, res) {
   await reservationsServices.updateStatus(reservation.reservation_id, 'seated');
   const data = await services.update(seatedTable);
   res.status(200).json({ data });
-}
+} // seats a reservation at a table
 
 async function finish(req, res) {
   const table = res.locals.table;
@@ -195,7 +195,7 @@ async function finish(req, res) {
   await reservationsServices.updateStatus(table.reservation_id, 'finished');
   const data = await services.update(cleanTable);
   res.status(200).json({ data });
-}
+} // frees a table
 
 module.exports = {
   list: asyncErrorBoundary(list),
